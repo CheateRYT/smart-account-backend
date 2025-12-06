@@ -198,7 +198,7 @@ export class AuthService {
   async getCurrentUser(userId: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['logo', 'accounts', 'transactions', 'budget'],
+      relations: ['logo', 'accounts', 'transactions', 'budgets'],
     });
 
     if (!user) {

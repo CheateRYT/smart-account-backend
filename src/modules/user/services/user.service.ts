@@ -23,7 +23,7 @@ export class UserService {
   async findOne(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['logo', 'accounts', 'budget'],
+      relations: ['logo', 'accounts', 'budgets'],
     });
 
     if (!user) {
@@ -48,7 +48,7 @@ export class UserService {
 
     return this.userRepository.findOneOrFail({
       where: { id: savedUser.id },
-      relations: ['logo', 'accounts', 'budget'],
+      relations: ['logo', 'accounts', 'budgets'],
     });
   }
 
@@ -81,7 +81,7 @@ export class UserService {
 
     return this.userRepository.findOneOrFail({
       where: { id: savedUser.id },
-      relations: ['logo', 'accounts', 'budget'],
+      relations: ['logo', 'accounts', 'budgets'],
     });
   }
 
@@ -98,6 +98,7 @@ export class UserService {
     return savedUser;
   }
 }
+
 
 
 
