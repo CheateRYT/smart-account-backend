@@ -6,6 +6,7 @@ import { TransactionEntity } from './finance/transaction.entity';
 import { BudgetEntity } from './finance/budget.entity';
 import { AnalyticsTaskEntity } from './finance/analytics-task.entity';
 import { ChatMessageEntity } from './gigachat/chat-message.entity';
+import { NotificationEntity } from './notifications/notification.entity';
 
 const Entities = [
   FileEntity,
@@ -16,6 +17,7 @@ const Entities = [
   BudgetEntity,
   AnalyticsTaskEntity,
   ChatMessageEntity,
+  NotificationEntity,
 ];
 
 export default Entities;

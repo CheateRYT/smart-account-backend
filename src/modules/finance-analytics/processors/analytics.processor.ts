@@ -42,7 +42,10 @@ export class AnalyticsProcessor extends WorkerHost {
   }
 
   async process(job: Job<AnalyticsJobData>): Promise<void> {
-    const { taskId, userId, type, accountId, dateFrom, dateTo, comment } = job.data;
+    const { taskId, userId, type, accountId, dateFrom: dateFromRaw, dateTo: dateToRaw, comment } = job.data;
+
+    const dateFrom = dateFromRaw ? (dateFromRaw instanceof Date ? dateFromRaw : new Date(dateFromRaw)) : undefined;
+    const dateTo = dateToRaw ? (dateToRaw instanceof Date ? dateToRaw : new Date(dateToRaw)) : undefined;
 
     this.logger.log(`Обработка задачи аналитики ${taskId} типа ${type}`);
 
@@ -125,7 +128,10 @@ export class AnalyticsProcessor extends WorkerHost {
       this.logger.error(`Ошибка обработки задачи ${taskId}: ${error.message}`, error.stack);
       
       task.status = AnalyticsStatus.FAILED;
-      task.error = error.message;
+      const errorMessage = error.message || 'Неизвестная ошибка';
+      task.error = errorMessage.includes('timeout') 
+        ? 'Превышено время ожидания ответа от AI. Попробуйте создать анализ снова.'
+        : errorMessage;
       await this.analyticsTaskRepository.save(task);
     }
   }

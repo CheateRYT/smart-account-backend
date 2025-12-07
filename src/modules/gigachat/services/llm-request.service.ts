@@ -24,8 +24,9 @@ export class LLMRequestService implements OnModuleInit {
       credentials: config.authKey,
       model: config.model,
       httpsAgent: this.httpsAgent,
+      timeout: 120000,
     });
-    this.logger.log(`GigaChat инициализирован с моделью: ${config.model}`);
+    this.logger.log(`GigaChat инициализирован с моделью: ${config.model}, timeout: 120s`);
   }
 
   async request(message: string): Promise<string> {

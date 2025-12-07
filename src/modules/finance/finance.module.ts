@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountEntity } from 'src/entities/finance/account.entity';
 import { TransactionEntity } from 'src/entities/finance/transaction.entity';
@@ -10,11 +10,13 @@ import { AccountResolver } from './resolvers/account.resolver';
 import { TransactionResolver } from './resolvers/transaction.resolver';
 import { BudgetResolver } from './resolvers/budget.resolver';
 import { BanksModule } from '../banks/banks.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AccountEntity, TransactionEntity, BudgetEntity]),
     BanksModule,
+    forwardRef(() => NotificationsModule),
   ],
   providers: [
     AccountService,

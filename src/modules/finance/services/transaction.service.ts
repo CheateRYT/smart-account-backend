@@ -3,6 +3,8 @@ import {
   NotFoundException,
   Logger,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +16,8 @@ import { TransactionListInput } from '../inputs/transaction-list.input';
 import { PaginatedTransactionResponse } from '../responses/paginated-transaction.response';
 import { TransactionStatus } from 'src/entities/finance/transaction-status.enum';
 import { TransactionType } from 'src/entities/finance/transaction-type.enum';
+import { NotificationCheckerService } from 'src/modules/notifications/services/notification-checker.service';
+import { BudgetService } from './budget.service';
 
 @Injectable()
 export class TransactionService {
@@ -24,6 +28,10 @@ export class TransactionService {
     private readonly transactionRepository: Repository<TransactionEntity>,
     @InjectRepository(AccountEntity)
     private readonly accountRepository: Repository<AccountEntity>,
+    @Inject(forwardRef(() => NotificationCheckerService))
+    private readonly notificationChecker: NotificationCheckerService,
+    @Inject(forwardRef(() => BudgetService))
+    private readonly budgetService: BudgetService,
   ) {}
 
   async create(
@@ -62,6 +70,31 @@ export class TransactionService {
 
     if (savedTransaction.status === TransactionStatus.COMPLETED) {
       await this.recalculateAccountBalance(account.id);
+
+      if (savedTransaction.type === TransactionType.EXPENSE && savedTransaction.category) {
+        try {
+          await this.budgetService.recalculateAllBudgetsForUser(userId);
+        } catch (error) {
+          this.logger.error(
+            `Ошибка при обновлении бюджета для транзакции ${savedTransaction.id}:`,
+            error,
+          );
+        }
+      }
+
+      try {
+        await this.notificationChecker.checkAnomalousTransactions(
+          userId,
+          savedTransaction,
+        );
+        await this.notificationChecker.checkBudgetLimits(userId);
+        await this.notificationChecker.checkFinancialCushion(userId);
+      } catch (error) {
+        this.logger.error(
+          `Ошибка при проверке уведомлений для транзакции ${savedTransaction.id}:`,
+          error,
+        );
+      }
     }
 
     return this.transactionRepository.findOneOrFail({
@@ -268,6 +301,22 @@ export class TransactionService {
       ) {
         await this.recalculateAccountBalance(savedTransaction.accountId);
       }
+
+      if (
+        (savedTransaction.status === TransactionStatus.COMPLETED ||
+          oldStatus === TransactionStatus.COMPLETED) &&
+        (savedTransaction.type === TransactionType.EXPENSE || transaction.type === TransactionType.EXPENSE) &&
+        (savedTransaction.category || transaction.category)
+      ) {
+        try {
+          await this.budgetService.recalculateAllBudgetsForUser(userId);
+        } catch (error) {
+          this.logger.error(
+            `Ошибка при обновлении бюджета для транзакции ${savedTransaction.id}:`,
+            error,
+          );
+        }
+      }
     }
 
     return this.transactionRepository.findOneOrFail({
@@ -280,11 +329,24 @@ export class TransactionService {
     const transaction = await this.findOne(id, userId);
     const accountId = transaction.accountId;
     const wasCompleted = transaction.status === TransactionStatus.COMPLETED;
+    const wasExpense = transaction.type === TransactionType.EXPENSE;
+    const hadCategory = !!transaction.category;
 
     await this.transactionRepository.remove(transaction);
 
     if (wasCompleted && accountId) {
       await this.recalculateAccountBalance(accountId);
+    }
+
+    if (wasCompleted && wasExpense && hadCategory) {
+      try {
+        await this.budgetService.recalculateAllBudgetsForUser(userId);
+      } catch (error) {
+        this.logger.error(
+          `Ошибка при обновлении бюджета после удаления транзакции ${transaction.id}:`,
+          error,
+        );
+      }
     }
 
     return transaction;

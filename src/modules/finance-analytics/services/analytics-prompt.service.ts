@@ -41,14 +41,17 @@ export class AnalyticsPromptService {
   buildUserPrompt(
     transactions: any[],
     accountName?: string,
-    dateFrom?: Date,
-    dateTo?: Date,
+    dateFrom?: Date | string,
+    dateTo?: Date | string,
     comment?: string,
     bankType?: string,
     budgetAmount?: number,
   ): string {
-    const period = dateFrom && dateTo
-      ? `с ${dateFrom.toLocaleDateString('ru-RU')} по ${dateTo.toLocaleDateString('ru-RU')}`
+    const dateFromObj = dateFrom ? (dateFrom instanceof Date ? dateFrom : new Date(dateFrom)) : undefined;
+    const dateToObj = dateTo ? (dateTo instanceof Date ? dateTo : new Date(dateTo)) : undefined;
+
+    const period = dateFromObj && dateToObj
+      ? `с ${dateFromObj.toLocaleDateString('ru-RU')} по ${dateToObj.toLocaleDateString('ru-RU')}`
       : 'за весь период';
 
     let accountInfo = accountName

@@ -174,5 +174,11 @@ export class AnalyticsService {
       order: { date: 'ASC' },
     });
   }
+
+  async remove(id: string, userId: string): Promise<AnalyticsTaskEntity> {
+    const task = await this.findOne(id, userId);
+    await this.analyticsTaskRepository.remove(task);
+    return task;
+  }
 }
 

@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 import Entities from './entities/entities';
 import { FileModule } from './modules/files/file.module';
 import { ConfigService } from './modules/config/config.service';
@@ -17,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { GigachatModule } from './modules/gigachat/gigachat.module';
 import { BanksModule } from './modules/banks/banks.module';
 import { UserModule } from './modules/user/user.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { JwtGuard } from './modules/auth/jwt.guard';
 import { RolesGuard } from './modules/auth/roles.guard';
 //import { AllExceptionLoggerFilter } from './common/filters/all-exception-logger.filter';
@@ -24,6 +26,7 @@ import { RolesGuard } from './modules/auth/roles.guard';
 @Module({
   imports: [
     ConfigModule,
+    ScheduleModule.forRoot(),
     AuthModule,
     BullModule.forRoot({
       connection: {
@@ -57,6 +60,7 @@ import { RolesGuard } from './modules/auth/roles.guard';
     GigachatModule,
     BanksModule,
     UserModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

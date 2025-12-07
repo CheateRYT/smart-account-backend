@@ -63,6 +63,14 @@ export class AnalyticsResolver {
   ): Promise<AnalyticsTaskEntity> {
     return this.analyticsService.refreshTask(id, user.sub);
   }
+
+  @Mutation(() => AnalyticsTaskEntity, { description: 'Удаление задачи аналитики' })
+  deleteAnalytics(
+    @CurrentUser() user: JwtPayload,
+    @Args('id', { description: 'Идентификатор задачи' }) id: string,
+  ): Promise<AnalyticsTaskEntity> {
+    return this.analyticsService.remove(id, user.sub);
+  }
 }
 
 
